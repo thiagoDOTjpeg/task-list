@@ -6,13 +6,15 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from './constants/constants';
+import { ConfigService } from '@nestjs/config';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
     private reflector: Reflector,
+    private configService: ConfigService,
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -24,7 +26,7 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
-    const request: Request = context.switchToHttp().getRequest();
+    const request: Request = context.switchToHttp().getRequest<Request>();
     const token = this.extractTokenFromRequest(request);
     if (!token) {
       throw new UnauthorizedException('No token provided');
@@ -32,7 +34,7 @@ export class AuthGuard implements CanActivate {
 
     try {
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: jwtConstants.secret,
+        secret: this.configService.get<string>('JWT_SECRET'),
       });
 
       request['user'] = payload;
@@ -42,9 +44,12 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  private extractTokenFromRequest(request: Request): string | undefined {
-    const [type, token] =
-      request.headers.get('Authorization')?.split(' ') ?? [];
+  private extractTokenFromRequest(request: any): string | undefined {
+    const authHeader = request.headers?.authorization;
+    if (typeof authHeader !== 'string') {
+      return undefined;
+    }
+    const [type, token] = authHeader.split(' ');
     return type === 'Bearer' ? token : undefined;
   }
 }
