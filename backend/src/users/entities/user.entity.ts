@@ -1,3 +1,4 @@
+import { AutoMap } from '@automapper/classes';
 import { Task } from 'src/tasks/entities/task.entity';
 import {
   Column,
@@ -11,17 +12,30 @@ import {
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
+  @AutoMap()
   id: number;
+
   @Column({ unique: true, nullable: false })
+  @AutoMap()
   username: string;
+
   @Column({ unique: true, nullable: false })
+  @AutoMap()
   email: string;
+
   @Column({ nullable: false })
+  @AutoMap()
   password: string;
+
   @CreateDateColumn()
+  @AutoMap()
   createdAt: Date;
+
   @UpdateDateColumn()
+  @AutoMap()
   updatedAt: Date;
+
   @OneToMany(() => Task, (task) => task.user)
+  @AutoMap()
   tasks: Task[];
 }

@@ -8,6 +8,9 @@ import { Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import { PaginationQueryDto } from './dto/pagination-query.dto';
+import { InjectMapper } from '@automapper/nestjs';
+import { Mapper } from '@automapper/core';
+import { ResponseTaskDto } from './dto/response-task.dto';
 
 @Injectable()
 export class TasksService {
@@ -16,9 +19,13 @@ export class TasksService {
     private readonly taskRepository: Repository<Task>,
     private jwtService: JwtService,
     private usersService: UsersService,
+    @InjectMapper() private readonly classMapper: Mapper,
   ) { }
 
-  async create(createTaskDto: CreateTaskDto, request: Request): Promise<Task> {
+  async create(
+    createTaskDto: CreateTaskDto,
+    request: Request,
+  ): Promise<ResponseTaskDto> {
     const authHeader = request.headers?.authorization;
     if (!authHeader) {
       throw new Error('Authorization header not found');
@@ -33,7 +40,15 @@ export class TasksService {
     }
     const task = this.taskRepository.create(createTaskDto);
     task.user = user;
-    return this.taskRepository.save(task);
+    const savedTask = await this.taskRepository.save(task);
+    try {
+      return this.classMapper.mapAsync(savedTask, Task, ResponseTaskDto);
+    } catch (err) {
+      if (err instanceof Error) {
+        throw new Error(`create error: ${err.message}`);
+      }
+      throw new Error('create error: Unknown error');
+    }
   }
 
   async findAll(paginationQuery: PaginationQueryDto) {

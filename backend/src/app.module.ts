@@ -9,6 +9,8 @@ import { AuthModule } from './auth/auth.module';
 import { User } from './users/entities/user.entity';
 import { ConfigModule } from '@nestjs/config';
 import { AuthGuard } from './auth/auth.guard';
+import { AutomapperModule } from '@automapper/nestjs';
+import { classes } from '@automapper/classes';
 
 @Module({
   imports: [
@@ -22,6 +24,9 @@ import { AuthGuard } from './auth/auth.guard';
       database: process.env.DB_DATABASE,
       entities: [Task, User],
       synchronize: true,
+    }),
+    AutomapperModule.forRoot({
+      strategyInitializer: classes(),
     }),
     TasksModule,
     UsersModule,

@@ -16,7 +16,7 @@ import { PaginationQueryDto } from './dto/pagination-query.dto';
 
 @Controller('tasks')
 export class TasksController {
-  constructor(private readonly tasksService: TasksService) { }
+  constructor(private readonly tasksService: TasksService) {}
 
   @Post()
   create(@Body() createTaskDto: CreateTaskDto, @Request() req) {
