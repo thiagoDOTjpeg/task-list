@@ -11,6 +11,8 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthGuard } from './auth/auth.guard';
 import { AutomapperModule } from '@automapper/nestjs';
 import { classes } from '@automapper/classes';
+import { UsersProfile } from 'shared/src/users.profile';
+import { TaskProfile } from 'shared/src/task.profile';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { classes } from '@automapper/classes';
   ],
   controllers: [AppController],
   providers: [
+    UsersProfile,
+    TaskProfile,
     AppService,
     {
       provide: 'APP_GUARD',

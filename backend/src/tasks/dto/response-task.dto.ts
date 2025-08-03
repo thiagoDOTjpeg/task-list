@@ -1,4 +1,5 @@
 import { AutoMap } from '@automapper/classes';
+import { ResponseUserMinimalDto } from 'src/users/dto/response-user-minimal.dto';
 import { User } from 'src/users/entities/user.entity';
 
 export class ResponseTaskDto {
@@ -14,6 +15,6 @@ export class ResponseTaskDto {
   createdAt: Date;
   @AutoMap()
   updatedAt: Date;
-  @AutoMap()
-  user: User;
+  @AutoMap(() => ResponseUserMinimalDto)
+  user: ResponseUserMinimalDto;
 }

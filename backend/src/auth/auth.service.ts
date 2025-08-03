@@ -9,7 +9,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) { }
+  ) {}
 
   async login(authDto: AuthDto): Promise<{ access_token: string }> {
     const user = await this.usersService.findByUsername(authDto.username);

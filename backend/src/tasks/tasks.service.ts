@@ -4,51 +4,20 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { Task } from './entities/task.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Request } from 'express';
-import { JwtService } from '@nestjs/jwt';
-import { UsersService } from 'src/users/users.service';
-import { PaginationQueryDto } from './dto/pagination-query.dto';
-import { InjectMapper } from '@automapper/nestjs';
-import { Mapper } from '@automapper/core';
-import { ResponseTaskDto } from './dto/response-task.dto';
+import { PaginationQueryDto } from '../../shared/dto/pagination-query.dto';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class TasksService {
   constructor(
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
-    private jwtService: JwtService,
-    private usersService: UsersService,
-    @InjectMapper() private readonly classMapper: Mapper,
   ) { }
 
-  async create(
-    createTaskDto: CreateTaskDto,
-    request: Request,
-  ): Promise<ResponseTaskDto> {
-    const authHeader = request.headers?.authorization;
-    if (!authHeader) {
-      throw new Error('Authorization header not found');
-    }
-    const [type, token] = authHeader.split(' ');
-    const decodedToken = this.jwtService.decode<JwtPayload>(token);
-    const user = await this.usersService.findByUsername(decodedToken.username);
-    if (!user) {
-      throw new NotFoundException(
-        `User with the username ${decodedToken.username} not found`,
-      );
-    }
+  async create(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
     const task = this.taskRepository.create(createTaskDto);
     task.user = user;
-    const savedTask = await this.taskRepository.save(task);
-    try {
-      return this.classMapper.mapAsync(savedTask, Task, ResponseTaskDto);
-    } catch (err) {
-      if (err instanceof Error) {
-        throw new Error(`create error: ${err.message}`);
-      }
-      throw new Error('create error: Unknown error');
-    }
+    return this.taskRepository.save(task);
   }
 
   async findAll(paginationQuery: PaginationQueryDto) {
@@ -56,6 +25,7 @@ export class TasksService {
     const skip = (page - 1) * limit;
 
     const [data, total] = await this.taskRepository.findAndCount({
+      relations: ['user'],
       skip: skip,
       take: limit,
     });
@@ -69,8 +39,11 @@ export class TasksService {
     };
   }
 
-  async findOne(id: number): Promise<Task | null> {
-    const task = await this.taskRepository.findOneBy({ id });
+  async findOne(id: number): Promise<Task> {
+    const task = await this.taskRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
     if (!task) {
       throw new NotFoundException(`Task with ID ${id} not found`);
     }
@@ -78,13 +51,9 @@ export class TasksService {
   }
 
   async update(id: number, updateTaskDto: UpdateTaskDto): Promise<Task> {
-    const task = await this.taskRepository.preload({
-      id: id,
-      ...updateTaskDto,
-    });
-    if (!task) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
-    }
+    const task = await this.findOne(id);
+    Object.assign(task, updateTaskDto);
+
     return this.taskRepository.save(task);
   }
 
