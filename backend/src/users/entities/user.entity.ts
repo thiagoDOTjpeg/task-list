@@ -24,7 +24,6 @@ export class User {
   email: string;
 
   @Column({ nullable: false })
-  @AutoMap()
   password: string;
 
   @CreateDateColumn()
