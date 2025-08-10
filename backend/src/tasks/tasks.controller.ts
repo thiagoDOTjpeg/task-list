@@ -14,7 +14,6 @@ import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { PaginationQueryDto } from '../../shared/dto/pagination-query.dto';
-import { User } from 'src/users/entities/user.entity';
 import { InjectMapper } from '@automapper/nestjs';
 import { Mapper } from '@automapper/core';
 import { Task } from './entities/task.entity';
